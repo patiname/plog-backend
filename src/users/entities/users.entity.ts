@@ -1,7 +1,9 @@
+import { InternalServerErrorException } from '@nestjs/common';
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
-import { IsEmail, IsString, Length } from 'class-validator';
+import { IsEmail, IsNumber, IsString, Length } from 'class-validator';
 import { CoreEntity } from 'src/common/entities/core.entity';
-import { Column, Entity } from 'typeorm';
+import { BeforeInsert, Column, Entity } from 'typeorm';
+import * as bcrypt from 'bcrypt';
 
 @InputType('UserInputType', { isAbstract: true })
 @ObjectType()
@@ -17,6 +19,27 @@ export class User extends CoreEntity {
   @Length(3, 10)
   @IsString()
   password: string;
+
+  @Field((type) => String)
+  @Column()
+  @IsString()
+  nickname: string;
+
+  @Field((type) => String, { nullable: true })
+  @Column()
+  @IsString()
+  phoneNum?: string;
+
+  @BeforeInsert()
+  async hashPassword(): Promise<void> {
+    try {
+      //유저가 작성한 비밀번호를 해시처리하기
+      this.password = await bcrypt.hash(this.password, 10);
+    } catch (error) {
+      console.log(error);
+      throw new InternalServerErrorException();
+    }
+  }
 }
 
 // 1. id
@@ -24,3 +47,8 @@ export class User extends CoreEntity {
 // 3. password
 // 4. create date
 // 5. update date
+
+// 1.entity
+// 2.dto
+// 3.resovler
+// 4.service

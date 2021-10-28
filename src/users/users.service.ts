@@ -5,6 +5,7 @@ import {
   CreateAccountInput,
   CreateAccountOuput,
 } from './dto/createAccount.dto';
+import { LoginInput, LoginOutput } from './dto/login.dto';
 import { User } from './entities/users.entity';
 
 @Injectable()
@@ -16,6 +17,8 @@ export class UsersService {
   async createAccount({
     email,
     password,
+    phoneNum,
+    nickname,
   }: CreateAccountInput): Promise<CreateAccountOuput> {
     try {
       // 1.아이디 중복 확인
@@ -27,11 +30,24 @@ export class UsersService {
         return { ok: false, error: '이미 존재하는 아이디 입니다.' };
       }
 
-      await this.users.save(this.users.create({ email, password }));
+      await this.users.save(
+        this.users.create({ email, password, phoneNum, nickname }),
+      );
 
       return { ok: true };
     } catch (error) {
       return { ok: false, error: '회원가입을 할수 없습니다.' };
+    }
+  }
+
+  async login({ email, password }: LoginInput): Promise<LoginOutput> {
+    try {
+      const userEmail = await this.users.findOne({ email });
+      if (!userEmail) {
+        return { ok: false, error: '없는 유저 입니다.' };
+      }
+    } catch (error) {
+      return { ok: false, error: '로그인을 할 수 없습니다.' };
     }
   }
 }
