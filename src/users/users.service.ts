@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { JwtService } from 'src/jwt/jwt.service';
 import { Repository } from 'typeorm';
 import {
   CreateAccountInput,
@@ -12,6 +13,7 @@ import { User } from './entities/users.entity';
 export class UsersService {
   constructor(
     @InjectRepository(User) private readonly users: Repository<User>,
+    private readonly jwtService: JwtService,
   ) {}
 
   async createAccount({
@@ -42,12 +44,29 @@ export class UsersService {
 
   async login({ email, password }: LoginInput): Promise<LoginOutput> {
     try {
-      const userEmail = await this.users.findOne({ email });
-      if (!userEmail) {
+      const user = await this.users.findOne({ email });
+      if (!user) {
         return { ok: false, error: '없는 유저 입니다.' };
       }
+
+      const passwordOk = await user.checkPassword(password);
+      // console.log(passwordOk);
+      if (!passwordOk) {
+        return { ok: false, error: '패스워드가 틀렸습니다.' };
+      }
+
+      const token = this.jwtService.sign(user.id);
+      // console.log(token);
+
+      return {
+        ok: true,
+        token,
+      };
     } catch (error) {
       return { ok: false, error: '로그인을 할 수 없습니다.' };
     }
   }
 }
+
+// 로그인 -> 유저가 맞을때 -> 토큰 발급 -> 내사이트에서 권한 행사
+//         유저가 아닐때 /
