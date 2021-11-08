@@ -7,6 +7,7 @@ import {
   CreateAccountOuput,
 } from './dto/createAccount.dto';
 import { LoginInput, LoginOutput } from './dto/login.dto';
+import { UserProfileOutput } from './dto/userProfile.dto';
 import { User } from './entities/users.entity';
 
 @Injectable()
@@ -64,6 +65,22 @@ export class UsersService {
       };
     } catch (error) {
       return { ok: false, error: '로그인을 할 수 없습니다.' };
+    }
+  }
+
+  async findById(id: number): Promise<UserProfileOutput> {
+    try {
+      const user = await this.users.findOne({ id });
+      if (!user) {
+        return { ok: false, error: '유저를 찾을 수 없습니다.' };
+      }
+
+      return {
+        ok: true,
+        user,
+      };
+    } catch (error) {
+      return { ok: false, error: '없는 유저 입니다.' };
     }
   }
 }
