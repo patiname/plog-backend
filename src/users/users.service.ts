@@ -6,6 +6,7 @@ import {
   CreateAccountInput,
   CreateAccountOuput,
 } from './dto/createAccount.dto';
+import { EditProfileInput, EditProfileOutput } from './dto/editProfile.dto';
 import { LoginInput, LoginOutput } from './dto/login.dto';
 import { UserProfileOutput } from './dto/userProfile.dto';
 import { User } from './entities/users.entity';
@@ -45,7 +46,10 @@ export class UsersService {
 
   async login({ email, password }: LoginInput): Promise<LoginOutput> {
     try {
-      const user = await this.users.findOne({ email });
+      const user = await this.users.findOne(
+        { email },
+        { select: ['id', 'password'] },
+      );
       if (!user) {
         return { ok: false, error: '없는 유저 입니다.' };
       }
@@ -83,7 +87,31 @@ export class UsersService {
       return { ok: false, error: '없는 유저 입니다.' };
     }
   }
-}
 
-// 로그인 -> 유저가 맞을때 -> 토큰 발급 -> 내사이트에서 권한 행사
-//         유저가 아닐때 /
+  async editProfile(
+    id: number,
+    { email, password }: EditProfileInput,
+  ): Promise<EditProfileOutput> {
+    try {
+      const user = await this.users.findOne({ id });
+      if (!user) {
+        return { ok: false, error: '없는 유저 입니다.' };
+      }
+
+      if (email) {
+        user.email = email;
+      }
+
+      if (password) {
+        user.password = password;
+      }
+
+      await this.users.save(user);
+      return {
+        ok: true,
+      };
+    } catch (error) {
+      return { ok: false, error: '수정할 수 없습니다.' };
+    }
+  }
+}

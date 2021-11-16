@@ -6,6 +6,7 @@ import {
   CreateAccountInput,
   CreateAccountOuput,
 } from './dto/createAccount.dto';
+import { EditProfileInput, EditProfileOutput } from './dto/editProfile.dto';
 import { LoginInput, LoginOutput } from './dto/login.dto';
 import { User } from './entities/users.entity';
 import { UsersService } from './users.service';
@@ -30,5 +31,14 @@ export class UsersResolver {
   @Mutation((returns) => LoginOutput)
   async login(@Args('input') loginInput: LoginInput): Promise<LoginOutput> {
     return this.usersService.login(loginInput);
+  }
+
+  @Mutation((returns) => EditProfileOutput)
+  @UseGuards(AuthGuard)
+  async editProfile(
+    @AuthUser() authUser: User,
+    @Args('input') editProfileInput: EditProfileInput,
+  ): Promise<EditProfileOutput> {
+    return this.usersService.editProfile(authUser.id, editProfileInput);
   }
 }
